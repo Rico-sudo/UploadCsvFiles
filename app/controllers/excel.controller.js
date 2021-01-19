@@ -1,9 +1,6 @@
-var stream = require("stream");
-
 const db = require("../config/db.config.js");
 const Customer = db.Customer;
 const User = db.User;
-const excel = require("exceljs");
 
 const fs = require("fs");
 const readXlsxFile = require("read-excel-file/node");
@@ -11,11 +8,45 @@ const readXlsxFile = require("read-excel-file/node");
 const csv = require("csv-parser");
 const users = [];
 const customers = [];
+const heads = [];
+const headsuser = [];
 exports.uploadFile = (req, res) => {
   try {
-    fs.createReadStream(__basedir + "/uploads/" + req.file.filename)
+    fs.createReadStream(__basedir + "/uploads/" + req.file.filename, {
+      headers: false,
+    })
 
-      .pipe(csv(() => {}))
+      .pipe(csv())
+      .on("headers", (head) => {
+        const row = Object.values(head)[0].split("|");
+        const transformHead = {
+          cont_id: row[0],
+          transaction_id: row[1],
+          transaction_date: row[2],
+          prod_price_net: row[3],
+          prod_id: row[4],
+        };
+
+        heads.push(transformHead);
+        let first_col = Object.values(transformHead)[0].split(",");
+        let second_col = Object.values(transformHead)[1].split(",");
+        let third_col = Object.values(transformHead)[2].split(",");
+        let fourth_col = Object.values(transformHead)[3].split(",");
+
+        console.log(
+          "@@COL@@" +
+            "  " +
+            first_col +
+            "\n" +
+            second_col +
+            "\n" +
+            third_col +
+            "\n" +
+            fourth_col +
+            "\n"
+        );
+      })
+
       .on("data", (customer) => {
         const row = Object.values(customer)[0].split("|");
         const transformedRow = {
@@ -26,6 +57,14 @@ exports.uploadFile = (req, res) => {
           prod_id: row[4],
         };
         customers.push(transformedRow);
+        console.log(
+          "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@this are the transf row" +
+            JSON.stringify(transformedRow)
+        );
+        // const head = Object.values(transformedRow)[0].split(":");
+        // const headob = {
+
+        // }
       })
       .on("end", () => {
         Customer.bulkCreate(customers).then(() => {
@@ -51,6 +90,35 @@ exports.uploadUserFile = (req, res) => {
     fs.createReadStream(__basedir + "/uploads/" + req.file.filename)
 
       .pipe(csv(() => {}))
+      .on("headers", (head) => {
+        const row = Object.values(head)[0].split("|");
+        const transformHeadUser = {
+          cont_id: row[0],
+          transaction_id: row[1],
+          transaction_date: row[2],
+          prod_price_net: row[3],
+          prod_id: row[4],
+        };
+
+        headsuser.push(transformHeadUser);
+        let first_col = Object.values(transformHeadUser)[0].split(",");
+        let second_col = Object.values(transformHeadUser)[1].split(",");
+        let third_col = Object.values(transformHeadUser)[2].split(",");
+        let fourth_col = Object.values(transformHeadUser)[3].split(",");
+
+        console.log(
+          "@@COL@@" +
+            "  " +
+            first_col +
+            "\n" +
+            second_col +
+            "\n" +
+            third_col +
+            "\n" +
+            fourth_col +
+            "\n"
+        );
+      })
       .on("data", (user) => {
         const row = Object.values(user)[0].split("|");
         const transformedRow = {
@@ -78,10 +146,10 @@ exports.uploadUserFile = (req, res) => {
       filename: req.file.originalname,
       message: "Upload Error! message = " + error.message,
     };
+
     res.json(result);
   }
 };
-
 
 /**
  * Upload multiple Excel Files task was for csv but Xls can be processed as well if desired
@@ -166,6 +234,5 @@ exports.downloadFile = (req, res) => {
       };
       customers.push(customer);
     }
-
   });
 };

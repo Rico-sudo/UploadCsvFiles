@@ -7,7 +7,7 @@ const env = {
   pool: {
     max: 5,
     min: 0,
-    acquire: 300000,
+    acquire: 3000000,
     idle: 10000
   }
 };

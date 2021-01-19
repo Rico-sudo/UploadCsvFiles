@@ -3,6 +3,9 @@ const app = express()
 
 const db = require('./app/config/db.config.js')
 
+
+app.set('view engine', 'pug' );
+
 global.__basedir = __dirname
 
 const isForced = false
@@ -17,8 +20,8 @@ app.use('/', router)
 
 //gig routes
 
-app.use('/gigs', require('./app/routers/gigs'))
-// app.use('/user', require('./app/routers/user'));
+app.use('/gigs', require('./app/routers/gigs'));
+app.use('/mapping', require('./app/routers/mapping'));
 
 // Create a Server
 const server = app.listen(4000, 'localhost', function () {
@@ -27,3 +30,4 @@ const server = app.listen(4000, 'localhost', function () {
 
   console.log('App listening at http://%s:%s', host, port)
 })
+ 
